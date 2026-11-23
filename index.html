@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PROOF — Imagined Frames</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230e0d0b'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-family='Georgia,serif' font-size='36' fill='%23e8e0d0'%3EP%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e0d0b;
+      --bg-2: #161410;
+      --ink: #e8e0d0;
+      --muted: #8a8170;
+      --faint: #5c564a;
+      --line: #2a261f;
+      --line-2: #3d382e;
+      --accent: #d4a574;
+      --accent-dim: #a37b52;
+      --danger: #c45c3e;
+      --frame: #0a0908;
+      --hole: #1c1a16;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: var(--bg); color: var(--ink); }
+    body {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100vh;
+      letter-spacing: 0.01em;
+    }
+    body::before {
+      content: "";
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      opacity: 0.07;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      animation: grain 0.6s steps(2) infinite;
+      mix-blend-mode: overlay;
+    }
+    @keyframes grain {
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(-2%, 1%); }
+      50% { transform: translate(1%, -1%); }
+      75% { transform: translate(-1%, 2%); }
+    }
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 36px 24px 80px;
+      position: relative;
+      z-index: 1;
+    }
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 18px;
+      margin-bottom: 28px;
+    }
+    .mark {
+      font-family: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+      font-size: 42px;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+    .mark small {
+      display: block;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      color: var(--muted);
+      margin-top: 8px;
+      font-style: normal;
+    }
+    .meta {
+      text-align: right;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .meta a { color: var(--accent); text-decoration: none; }
+    .meta a:hover { text-decoration: underline; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+    @media (min-width: 880px) {
+      .layout { grid-template-columns: 340px 1fr; align-items: start; }
+    }
+    .field-label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .block { margin-bottom: 18px; }
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%;
+      background: var(--bg-2);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 0;
+      padding: 12px 12px;
+      font: inherit;
+      font-size: 13px;
+      outline: none;
+      resize: vertical;
+    }
+    textarea:focus, input:focus, button:focus-visible, .chip:focus-visible {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 0 1px var(--accent-dim);
+    }
+    #prompt {
+      min-height: 120px;
+      font-family: "Instrument Serif", Georgia, serif;
+      font-size: 20px;
+      line-height: 1.35;
+      letter-spacing: 0.01em;
+    }
+    #negative { min-height: 56px; font-size: 12px; color: #c9c0b0; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      appearance: none;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 6px 10px;
+      font: inherit;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+    .chip[aria-pressed="true"], .chip.active {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .chip:hover { border-color: var(--line-2); color: var(--ink); }
+    .chip[aria-pressed="true"]:hover, .chip.active:hover { color: var(--bg); }
+    .seed-row { display: flex; gap: 6px; align-items: stretch; }
+    .seed-row input { flex: 1; }
+    .icon-btn {
+      appearance: none;
+      background: var(--bg-2);
+      color: var(--muted);
+      border: 1px solid var(--line);
+      padding: 0 12px;
+      font: inherit;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .icon-btn[aria-pressed="true"] {
+      color: var(--bg);
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .icon-btn:hover { color: var(--ink); border-color: var(--line-2); }
+    .icon-btn[aria-pressed="true"]:hover { color: var(--bg); }
+    .actions { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+    #generate {
+      appearance: none;
+      background: var(--ink);
+      color: var(--bg);
+      border: 0;
+      padding: 12px 22px;
+      font: inherit;
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      cursor: pointer;
+      min-width: 140px;
+    }
+    #generate:hover { background: var(--accent); }
+    #generate:disabled {
+      background: var(--line-2);
+      color: var(--muted);
+      cursor: wait;
+    }
+    .hint { color: var(--faint); font-size: 10px; letter-spacing: 0.08em; }
+    .error {
+      color: var(--danger);
+      font-size: 12px;
+      margin-top: 12px;
+      min-height: 1.4em;
+      letter-spacing: 0.02em;
+    }
+    .stage-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .stage-actions { display: flex; gap: 8px; }
+    .text-btn {
+      appearance: none;
+      background: none;
+      border: 0;
+      color: var(--accent);
+      font: inherit;
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 0;
+    }
+    .text-btn:disabled { color: var(--faint); cursor: default; }
+    .text-btn:hover:not(:disabled) { color: var(--ink); }
+    .film {
+      background: var(--frame);
+      padding: 14px 36px 18px;
+      position: relative;
+    }
+    .film::before, .film::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      width: 16px;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--hole) 0 10px,
+        transparent 10px 14px,
+        var(--bg) 14px 26px,
+        transparent 26px 30px
+      );
+      opacity: 0.95;
+    }
+    .film::before { left: 8px; }
+    .film::after { right: 8px; }
+    .well {
+      background: #11100d;
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid #000;
+      min-height: 280px;
+    }
+    .well.ratio-3-2 { aspect-ratio: 3 / 2; }
+    .well.ratio-2-3 { aspect-ratio: 2 / 3; }
+    .well.ratio-16-9 { aspect-ratio: 16 / 9; }
+    .well.ratio-9-16 { aspect-ratio: 9 / 16; }
+    .well.ratio-4-3 { aspect-ratio: 4 / 3; }
+    .well img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    .placeholder {
+      text-align: center;
+      color: var(--faint);
+      padding: 24px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+    .placeholder em {
+      display: block;
+      font-family: "Instrument Serif", Georgia, serif;
+      font-style: italic;
+      font-size: 22px;
+      letter-spacing: 0.04em;
+      text-transform: none;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+    .well.loading .placeholder { opacity: 0.35; }
+    .shutter {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: #000;
+      pointer-events: none;
+    }
+    .well.loading .shutter {
+      display: block;
+      animation: expose 1.8s ease-in-out infinite;
+    }
+    @keyframes expose {
+      0%, 100% { opacity: 0.88; }
+      50% { opacity: 0.15; }
+    }
+    .status {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      min-height: 1.4em;
+    }
+    .gallery-wrap { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 18px; }
+    .gallery-wrap h2 {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+      gap: 10px;
+    }
+    .gallery button {
+      appearance: none;
+      background: var(--frame);
+      border: 1px solid var(--line);
+      padding: 6px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .gallery button:hover, .gallery button[aria-current="true"] {
+      border-color: var(--accent);
+    }
+    .gallery img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      background: #000;
+    }
+    .gallery figcaption {
+      display: block;
+      color: var(--faint);
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      margin-top: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .empty-gal { color: var(--faint); font-size: 11px; }
+    footer {
+      margin-top: 40px;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--faint);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    footer select {
+      background: var(--bg-2);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      font: inherit;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 6px 8px;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="mark">PROOF<small>IMAGINED FRAMES</small></div>
+      <div class="meta">
+        No account · No payment<br>
+        Source: <a id="source-link" href="https://pollinations.ai" target="_blank" rel="noopener">Pollinations Classic</a>
+      </div>
+    </header>
+
+    <div class="layout">
+      <form id="form" autocomplete="off">
+        <div class="block">
+          <label class="field-label" for="prompt">Prompt</label>
+          <textarea id="prompt" name="prompt" required placeholder="A still of a deserted drive-in at dusk…">cinematic still of a deserted drive-in at dusk, 35mm film, muted amber neon, empty lot, gentle grain, night air</textarea>
+        </div>
+        <div class="block">
+          <label class="field-label" for="negative">Negative prompt</label>
+          <textarea id="negative" name="negative" placeholder="What to avoid — text, watermark, blur…">text, watermark, logo, distorted faces, extra fingers</textarea>
+        </div>
+        <div class="block">
+          <div class="field-label" id="ratio-label">Frame</div>
+          <div class="row" id="ratios" role="group" aria-labelledby="ratio-label"></div>
+        </div>
+        <div class="block">
+          <div class="field-label" id="style-label">Stock</div>
+          <div class="row" id="styles" role="group" aria-labelledby="style-label"></div>
+        </div>
+        <div class="block">
+          <label class="field-label" for="seed">Seed</label>
+          <div class="seed-row">
+            <input id="seed" name="seed" type="number" inputmode="numeric" min="0" max="2147483647" value="">
+            <button type="button" class="icon-btn" id="reroll" title="New random seed">Roll</button>
+            <button type="button" class="icon-btn" id="lock" aria-pressed="false" title="Keep this seed on the next expose">Free</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="submit" id="generate">Expose</button>
+          <span class="hint">Enter to expose · Shift+Enter for a new line</span>
+        </div>
+        <p class="error" id="error" role="alert"></p>
+      </form>
+
+      <section>
+        <div class="stage-head">
+          <span id="frame-label">Frame —</span>
+          <div class="stage-actions">
+            <button type="button" class="text-btn" id="download" disabled>Download</button>
+          </div>
+        </div>
+        <div class="film">
+          <div class="well" id="well">
+            <div class="placeholder" id="placeholder">Ready to expose<em>Type a prompt, then hit Expose.</em></div>
+            <img id="shot" alt="Generated image" hidden>
+            <div class="shutter" aria-hidden="true"></div>
+          </div>
+        </div>
+        <p class="status" id="status" aria-live="polite"></p>
+      </section>
+    </div>
+
+    <section class="gallery-wrap">
+      <h2>Contact sheet · this session</h2>
+      <div class="gallery" id="gallery"></div>
+      <p class="empty-gal" id="gallery-empty">No frames yet.</p>
+    </section>
+
+    <footer>
+      <label>
+        Provider
+        <select id="provider"></select>
+      </label>
+      <span>Prototype · images are generated by the selected provider</span>
+    </footer>
+  </div>
+
+  <script>
+  (function () {
+    const SIZES = [
+      { id: "1:1", w: 768, h: 768, well: "ratio-1-1" },
+      { id: "3:2", w: 768, h: 512, well: "ratio-3-2" },
+      { id: "4:3", w: 768, h: 576, well: "ratio-4-3" },
+      { id: "16:9", w: 768, h: 432, well: "ratio-16-9" },
+      { id: "2:3", w: 512, h: 768, well: "ratio-2-3" },
+      { id: "9:16", w: 432, h: 768, well: "ratio-9-16" }
+    ];
+
+    const STYLES = [
+      { id: "none", label: "Clean", suffix: "" },
+      { id: "film", label: "Film still", suffix: "cinematic film still, 35mm, anamorphic, motivated lighting, subtle grain, photoreal" },
+      { id: "analog", label: "Portra", suffix: "shot on Kodak Portra 400, natural light, analog photography, fine grain, slightly faded blacks" },
+      { id: "noir", label: "Noir", suffix: "high-contrast black and white, film noir, deep shadows, 1940s cinematography" },
+      { id: "paint", label: "Oil", suffix: "oil painting, visible brushwork, rich pigment, museum lighting, no photography" },
+      { id: "edit", label: "Editorial", suffix: "editorial photography, sharp detail, clean lighting, magazine quality" }
+    ];
+
+    const MAX_AREA = 768 * 768;
+
+    const els = {
+      form: document.getElementById("form"),
+      prompt: document.getElementById("prompt"),
+      negative: document.getElementById("negative"),
+      seed: document.getElementById("seed"),
+      reroll: document.getElementById("reroll"),
+      lock: document.getElementById("lock"),
+      generate: document.getElementById("generate"),
+      error: document.getElementById("error"),
+      status: document.getElementById("status"),
+      well: document.getElementById("well"),
+      shot: document.getElementById("shot"),
+      placeholder: document.getElementById("placeholder"),
+      download: document.getElementById("download"),
+      frameLabel: document.getElementById("frame-label"),
+      gallery: document.getElementById("gallery"),
+      galleryEmpty: document.getElementById("gallery-empty"),
+      ratios: document.getElementById("ratios"),
+      styles: document.getElementById("styles"),
+      provider: document.getElementById("provider"),
+      sourceLink: document.getElementById("source-link")
+    };
+
+    const state = {
+      ratio: "1:1",
+      style: "film",
+      locked: false,
+      busy: false,
+      current: null,
+      gallery: [],
+      provider: "pollinations",
+      proxyReady: false
+    };
+
+    function randSeed() {
+      return Math.floor(Math.random() * 2147483647);
+    }
+
+    function padFrame(n) {
+      return String(n).padStart(3, "0");
+    }
+
+    function currentSize() {
+      return SIZES.find((s) => s.id === state.ratio) || SIZES[0];
+    }
+
+    function currentStyle() {
+      return STYLES.find((s) => s.id === state.style) || STYLES[0];
+    }
+
+    function setError(msg) {
+      els.error.textContent = msg || "";
+    }
+
+    function setStatus(msg) {
+      els.status.textContent = msg || "";
+    }
+
+    function setWellRatio() {
+      els.well.className = "well" + (state.busy ? " loading" : "");
+      const size = currentSize();
+      if (size.well && size.well !== "ratio-1-1") els.well.classList.add(size.well);
+    }
+
+    function renderChips() {
+      els.ratios.innerHTML = "";
+      SIZES.forEach((s) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.textContent = s.id;
+        b.setAttribute("aria-pressed", s.id === state.ratio ? "true" : "false");
+        b.addEventListener("click", () => {
+          state.ratio = s.id;
+          renderChips();
+          setWellRatio();
+        });
+        els.ratios.appendChild(b);
+      });
+      els.styles.innerHTML = "";
+      STYLES.forEach((s) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "chip";
+        b.textContent = s.label;
+        b.setAttribute("aria-pressed", s.id === state.style ? "true" : "false");
+        b.addEventListener("click", () => {
+          state.style = s.id;
+          renderChips();
+        });
+        els.styles.appendChild(b);
+      });
+    }
+
+    function composePrompt(prompt, negative, style) {
+      let text = prompt.trim();
+      if (style && style.suffix) text += ", " + style.suffix;
+      if (negative && negative.trim()) text += ". Avoid: " + negative.trim();
+      return text;
+    }
+
+    function clampSize(w, h) {
+      const area = w * h;
+      if (area <= MAX_AREA && w <= 768 && h <= 768) return { w, h };
+      const scale = Math.sqrt(MAX_AREA / area);
+      let nw = Math.min(768, Math.max(64, Math.round(w * scale)));
+      let nh = Math.min(768, Math.max(64, Math.round(h * scale)));
+      nw -= nw % 8;
+      nh -= nh % 8;
+      return { w: nw, h: nh };
+    }
+
+    function parseRetryAfter(res) {
+      const raw = res.headers.get("Retry-After") || res.headers.get("retry-after");
+      if (!raw) return 45;
+      const sec = Number(raw);
+      if (!Number.isNaN(sec)) return Math.max(1, Math.ceil(sec));
+      const when = Date.parse(raw);
+      if (!Number.isNaN(when)) return Math.max(1, Math.ceil((when - Date.now()) / 1000));
+      return 45;
+    }
+
+    async function readErrorBody(res) {
+      const type = (res.headers.get("content-type") || "").toLowerCase();
+      try {
+        if (type.includes("application/json")) {
+          const data = await res.json();
+          return data.message || data.error || data.details || data.code || JSON.stringify(data);
+        }
+        const text = await res.text();
+        if (text && text.length < 400 && !text.trim().startsWith("<")) return text.trim();
+      } catch (err) { /* ignore */ }
+      return "";
+    }
+
+    const providers = {
+      pollinations: {
+        label: "Pollinations (browser, no key)",
+        href: "https://pollinations.ai",
+        async generate({ prompt, width, height, seed }) {
+          const size = clampSize(width, height);
+          const url = "https://image.pollinations.ai/prompt/" +
+            encodeURIComponent(prompt) +
+            "?width=" + size.w +
+            "&height=" + size.h +
+            "&seed=" + seed +
+            "&nologo=true";
+          const res = await fetch(url, { headers: { "Accept": "image/jpeg, application/json;q=0.8" } });
+          if (res.status === 402 || res.status === 429) {
+            const wait = parseRetryAfter(res);
+            const body = await readErrorBody(res);
+            const err = new Error(body || ("Rate limited. Next free slot in " + wait + " seconds."));
+            err.retryAfter = wait;
+            throw err;
+          }
+          const type = (res.headers.get("content-type") || "").toLowerCase();
+          if (!res.ok) {
+            const body = await readErrorBody(res);
+            throw new Error(body || ("The image service returned " + res.status + "."));
+          }
+          if (type.includes("application/json") || type.includes("text/html")) {
+            const body = await readErrorBody(res);
+            throw new Error(body || "The prompt was refused or the service sent an error.");
+          }
+          const blob = await res.blob();
+          if (!blob.type.startsWith("image/")) {
+            throw new Error("The service did not return an image. Try a different prompt.");
+          }
+          return { blob, remoteUrl: url, width: size.w, height: size.h };
+        }
+      },
+      proxy: {
+        label: "Local proxy (HF / Cloudflare key)",
+        href: "",
+        async generate({ prompt, negative, width, height, seed }) {
+          const res = await fetch("/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "image/*, application/json" },
+            body: JSON.stringify({ prompt, negative, width, height, seed })
+          });
+          if (res.status === 402 || res.status === 429) {
+            const wait = parseRetryAfter(res);
+            const body = await readErrorBody(res);
+            throw new Error(body || ("Rate limited. Try again in " + wait + " seconds."));
+          }
+          if (!res.ok) {
+            const body = await readErrorBody(res);
+            throw new Error(body || ("Proxy returned " + res.status + "."));
+          }
+          const type = (res.headers.get("content-type") || "").toLowerCase();
+          if (type.includes("application/json")) {
+            const body = await readErrorBody(res);
+            throw new Error(body || "The proxy sent an error.");
+          }
+          const blob = await res.blob();
+          if (!blob.type.startsWith("image/")) {
+            throw new Error("The proxy did not return an image.");
+          }
+          return { blob, remoteUrl: "", width, height };
+        }
+      }
+    };
+
+    function providerList() {
+      const list = [
+        { id: "pollinations", label: providers.pollinations.label }
+      ];
+      list.push({
+        id: "proxy",
+        label: state.proxyReady ? providers.proxy.label : "Local proxy (not configured)"
+      });
+      return list;
+    }
+
+    function renderProvider() {
+      const opts = providerList();
+      els.provider.innerHTML = opts.map((o) =>
+        "<option value=\"" + o.id + "\"" + (o.id === state.provider ? " selected" : "") + ">" + o.label + "</option>"
+      ).join("");
+      const href = providers[state.provider] && providers[state.provider].href;
+      if (state.provider === "pollinations") {
+        els.sourceLink.href = href;
+        els.sourceLink.textContent = "Pollinations Classic";
+        els.sourceLink.hidden = false;
+      } else {
+        els.sourceLink.textContent = "Local proxy";
+        els.sourceLink.removeAttribute("href");
+        els.sourceLink.hidden = false;
+      }
+    }
+
+    function showImage(item) {
+      state.current = item;
+      els.shot.src = item.objectUrl;
+      els.shot.alt = item.prompt;
+      els.shot.hidden = false;
+      els.placeholder.hidden = true;
+      els.download.disabled = false;
+      els.frameLabel.textContent = "Frame " + padFrame(item.n) + "  ·  seed " + item.seed + "  ·  " + item.width + "×" + item.height;
+      [...els.gallery.querySelectorAll("button")].forEach((b) => {
+        b.setAttribute("aria-current", b.dataset.id === String(item.id) ? "true" : "false");
+      });
+    }
+
+    function renderGallery() {
+      els.gallery.innerHTML = "";
+      els.galleryEmpty.hidden = state.gallery.length > 0;
+      state.gallery.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.id = String(item.id);
+        btn.setAttribute("aria-current", state.current && state.current.id === item.id ? "true" : "false");
+        btn.title = item.prompt;
+        const img = document.createElement("img");
+        img.src = item.objectUrl;
+        img.alt = "";
+        const cap = document.createElement("figcaption");
+        cap.textContent = "No. " + padFrame(item.n) + "  ·  " + item.seed;
+        btn.appendChild(img);
+        btn.appendChild(cap);
+        btn.addEventListener("click", () => showImage(item));
+        els.gallery.appendChild(btn);
+      });
+    }
+
+    function filenameFor(item) {
+      const slug = (item.prompt || "proof").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+      const ext = (item.blob && item.blob.type === "image/png") ? "png" : "jpg";
+      return "proof-" + padFrame(item.n) + "-" + slug + "-seed" + item.seed + "." + ext;
+    }
+
+    async function expose(ev) {
+      if (ev) ev.preventDefault();
+      if (state.busy) return;
+      const prompt = els.prompt.value.trim();
+      if (!prompt) {
+        setError("Add a prompt first.");
+        els.prompt.focus();
+        return;
+      }
+      if (!state.locked || !els.seed.value) els.seed.value = String(randSeed());
+      const seed = Number(els.seed.value);
+      if (!Number.isFinite(seed) || seed < 0) {
+        setError("Seed must be a positive number.");
+        return;
+      }
+      const size = currentSize();
+      const style = currentStyle();
+      const negative = els.negative.value;
+      const fullPrompt = composePrompt(prompt, negative, style);
+      const providerId = state.provider;
+      if (providerId === "proxy" && !state.proxyReady) {
+        setError("The local proxy is not configured. Run node server.js with HF_TOKEN or CF_ACCOUNT_ID + CF_API_TOKEN, or switch the provider to Pollinations.");
+        return;
+      }
+
+      state.busy = true;
+      els.generate.disabled = true;
+      els.generate.textContent = "Exposing";
+      setError("");
+      setStatus("Exposing · this can take a little while, and the free Pollinations path allows about one new image every 45 seconds.");
+      setWellRatio();
+      els.well.classList.add("loading");
+
+      try {
+        const result = await providers[providerId].generate({
+          prompt: fullPrompt,
+          negative: negative.trim(),
+          width: size.w,
+          height: size.h,
+          seed: Math.floor(seed)
+        });
+        const objectUrl = URL.createObjectURL(result.blob);
+        const item = {
+          id: Date.now(),
+          n: state.gallery.length + 1,
+          prompt: prompt,
+          fullPrompt: fullPrompt,
+          negative: negative.trim(),
+          style: style.id,
+          seed: Math.floor(seed),
+          width: result.width,
+          height: result.height,
+          blob: result.blob,
+          objectUrl: objectUrl,
+          remoteUrl: result.remoteUrl || "",
+          provider: providerId
+        };
+        state.gallery.unshift(item);
+        item.n = state.gallery.length;
+        // Number by order of creation: oldest is 001
+        state.gallery.forEach((g, i) => { g.n = state.gallery.length - i; });
+        showImage(item);
+        renderGallery();
+        setStatus("Frame " + padFrame(item.n) + " ready.");
+      } catch (err) {
+        const msg = (err && err.message) ? err.message : "Something went wrong while generating.";
+        setError(msg);
+        setStatus("");
+      } finally {
+        state.busy = false;
+        els.generate.disabled = false;
+        els.generate.textContent = "Expose";
+        els.well.classList.remove("loading");
+        setWellRatio();
+      }
+    }
+
+    els.form.addEventListener("submit", expose);
+    els.prompt.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        expose();
+      }
+    });
+    els.reroll.addEventListener("click", () => {
+      els.seed.value = String(randSeed());
+    });
+    els.lock.addEventListener("click", () => {
+      state.locked = !state.locked;
+      els.lock.setAttribute("aria-pressed", state.locked ? "true" : "false");
+      els.lock.textContent = state.locked ? "Lock" : "Free";
+    });
+    els.download.addEventListener("click", () => {
+      if (!state.current) return;
+      const a = document.createElement("a");
+      a.href = state.current.objectUrl;
+      a.download = filenameFor(state.current);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+    els.provider.addEventListener("change", () => {
+      state.provider = els.provider.value;
+      try { sessionStorage.setItem("proof-provider", state.provider); } catch (e) { /* ignore */ }
+      renderProvider();
+    });
+
+    async function detectProxy() {
+      try {
+        const res = await fetch("/api/health", { headers: { "Accept": "application/json" } });
+        if (!res.ok) return;
+        const data = await res.json();
+        state.proxyReady = !!(data && data.proxyConfigured);
+      } catch (err) {
+        state.proxyReady = false;
+      }
+      const saved = (() => { try { return sessionStorage.getItem("proof-provider"); } catch (e) { return null; } })();
+      if (saved && providers[saved]) state.provider = saved;
+      if (state.provider === "proxy" && !state.proxyReady) state.provider = "pollinations";
+      renderProvider();
+    }
+
+    els.seed.value = String(randSeed());
+    renderChips();
+    setWellRatio();
+    renderProvider();
+    detectProxy();
+  })();
+  </script>
+</body>
+</html>
